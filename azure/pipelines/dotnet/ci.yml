@@ -34,6 +34,10 @@ parameters:
   default: false
   displayName: 'Whether to run ''dotnet publish''.'
 
+- name: WithNuGetCaching
+  type: boolean
+  default: true
+  displayName: 'Whether to use NuGet caching.'
 - name: WithNuGetTool
   type: boolean
   default: false
@@ -60,12 +64,23 @@ steps:
       version: ${{ parameters.DotNetSdkVersion }}
       includePreviewVersions: true
 
+- ${{ if eq(parameters.WithNuGetCaching, true) }}:
+  - task: Cache@2
+  displayName: 'NuGet package caching'
+  inputs:
+    key: 'nuget | "$(Agent.OS)" | **/packages.lock.json,!**/bin/**'
+    restoreKeys: |
+       nuget | "$(Agent.OS)"
+    path: $(Pipeline.Workspace)/.nuget/packages
+    cacheHitVar: nuGetCacheRestored
+
 - ${{ if eq(parameters.WithNuGetTool, true) }}:
   # dotnet restore does not yet work with external Azure Devops Artifacts: https://github.com/microsoft/azure-pipelines-tasks/issues/7160
   - task: NuGetToolInstaller@1
     displayName: 'Use specific NuGet tool ${{ parameters.NuGetToolVersion }}'
     inputs:
       versionSpec: ${{ parameters.NuGetToolVersion }}
+    condition: ne(variables.nuGetCacheRestored, 'true')
   - task: NuGetCommand@2
     displayName: 'NuGet restore'
     inputs:
@@ -74,6 +89,7 @@ steps:
       feedsToUse: 'config'
       nugetConfigPath: ${{ parameters.NuGetConfigPath }}
       externalFeedCredentials: ${{ parameters.ExternalFeedCredentials }}
+    condition: ne(variables.nuGetCacheRestored, 'true')
   
 # dotnet restore still seems necessary, see https://stackoverflow.com/questions/48440223/assets-file-project-assets-json-not-found-run-a-nuget-package-restore
 - task: DotNetCoreCLI@2
@@ -85,7 +101,8 @@ steps:
       feedsToUse: 'config'
       nugetConfigPath: ${{ parameters.NuGetConfigPath }}
       externalFeedCredentials: ${{ parameters.ExternalFeedCredentials }}
-    
+    condition: ne(variables.nuGetCacheRestored, 'true')
+
 - task: DotNetCoreCLI@2
   displayName: 'DotNet Build'
   inputs:
