@@ -80,7 +80,7 @@ steps:
     displayName: 'Use specific NuGet tool ${{ parameters.NuGetToolVersion }}'
     inputs:
       versionSpec: ${{ parameters.NuGetToolVersion }}
-    condition: eq(variables.nuGetCacheRestored, false)
+    condition: eq(variables.nuGetCacheRestored, 'true')
   - task: NuGetCommand@2
     displayName: 'NuGet restore'
     inputs:
@@ -89,7 +89,7 @@ steps:
       feedsToUse: 'config'
       nugetConfigPath: ${{ parameters.NuGetConfigPath }}
       externalFeedCredentials: ${{ parameters.ExternalFeedCredentials }}
-    condition: eq(variables.nuGetCacheRestored, false)
+    condition: ne(variables.nuGetCacheRestored, 'true')
   
 # dotnet restore still seems necessary, see https://stackoverflow.com/questions/48440223/assets-file-project-assets-json-not-found-run-a-nuget-package-restore
 - task: DotNetCoreCLI@2
@@ -101,7 +101,7 @@ steps:
       feedsToUse: 'config'
       nugetConfigPath: ${{ parameters.NuGetConfigPath }}
       externalFeedCredentials: ${{ parameters.ExternalFeedCredentials }}
-  condition: eq(variables.nuGetCacheRestored, false)
+  condition: ne(variables.nuGetCacheRestored, 'true')
 
 - task: DotNetCoreCLI@2
   displayName: 'DotNet Build'
