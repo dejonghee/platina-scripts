@@ -80,7 +80,7 @@ steps:
     displayName: 'Use specific NuGet tool ${{ parameters.NuGetToolVersion }}'
     inputs:
       versionSpec: ${{ parameters.NuGetToolVersion }}
-    condition: eq(variables.nuGetCacheRestored, 'true')
+    condition: ne(variables.nuGetCacheRestored, 'true')
   - task: NuGetCommand@2
     displayName: 'NuGet restore'
     inputs:
