@@ -101,7 +101,7 @@ steps:
       feedsToUse: 'config'
       nugetConfigPath: ${{ parameters.NuGetConfigPath }}
       externalFeedCredentials: ${{ parameters.ExternalFeedCredentials }}
-    condition: eq(variables.nuGetCacheRestored, false)
+  condition: eq(variables.nuGetCacheRestored, false)
 
 - task: DotNetCoreCLI@2
   displayName: 'DotNet Build'
